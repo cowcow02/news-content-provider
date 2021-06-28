@@ -1,0 +1,34 @@
+service: news-content-provider
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+custom:
+  stage: ${opt:stage, "local"}
+  wsgi:
+    app: api.app
+    packRequirements: false
+  mongoUri:
+    local: ${file(config-local.yml):mongoUri}
+    dev: ${env:MONGO_URI_DEV}
+    production: ${env:MONGO_URI}
+  mongoDbName:
+    local: ${file(config-local.yml):mongoDbName}
+    dev: ${env:MONGO_DATABASE_NAME_DEV}
+    production: ${env:MONGO_DATABASE_NAME}
+
+provider:
+  name: aws
+  runtime: python3.8
+  environment:
+    MONGO_URI: ${self:custom.mongoUri.${self:custom.stage}}
+    MONGO_DATABASE_NAME: ${self:custom.mongoDbName.${self:custom.stage}}
+
+functions:
+  api:
+    handler: wsgi_handler.handler
+    timeout: 30
+    events:
+      - http: ANY /
+      - http: 'ANY {proxy+}'

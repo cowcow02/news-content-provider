@@ -1,0 +1,90 @@
+version: 2.1
+
+orbs:
+  python: circleci/python@1.2
+  aws-cli: circleci/aws-cli@2.0.3
+
+workflows:
+  workflow:
+    jobs:
+      - test
+      - deploy-dev:
+          context:
+            - AWS
+          filters:
+            branches:
+              only: dev
+          requires:
+            - test
+      - deploy-production:
+          context:
+            - AWS
+          filters:
+            branches:
+              only: master
+          requires:
+            - test
+
+jobs:
+  test:
+    docker:
+      - image: cimg/python:3.8-node
+    steps:
+      - initialize_pip
+      - run:
+          name: Run tests
+          command: |
+            mkdir test-results
+            pytest
+  deploy-dev:
+    docker:
+      - image: cimg/python:3.8-node
+    steps:
+      - initialize_pip
+      - initialize_sls
+      - deploy:
+          to: "dev"
+  deploy-production:
+    docker:
+      - image: cimg/python:3.8-node
+    steps:
+      - initialize_pip
+      - initialize_sls
+      - deploy:
+          to: "production"
+
+commands:
+  deploy:
+    parameters:
+      to:
+        type: string
+    steps:
+      - run:
+          name: Deploy
+          command: sls deploy --stage << parameters.to >>
+
+  initialize_pip:
+    steps:
+      - checkout
+      - restore_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+      - python/install-packages:
+          pkg-manager: pip
+      - save_cache:
+          key: deps-{{ checksum "requirements.txt" }}
+          paths:
+            - ~/.local/share/virtualenvs/venv
+
+  initialize_sls:
+    steps:
+      - restore_cache:
+          key: deps-{{ checksum "yarn.lock" }}
+      - run:
+          name: Install Serverless & packages
+          command: |
+            sudo yarn global add serverless
+            yarn install
+      - save_cache:
+          key: deps-{{ checksum "yarn.lock" }}
+          paths:
+            - ~/.cache/yarn

@@ -1,0 +1,23 @@
+{
+  "name": "news-content-provider",
+  "version": "1.0.0",
+  "description": "Content provider service for news.",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@bitbucket.org/cowcow02/news-content-provider.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "homepage": "https://bitbucket.org/cowcow02/news-content-provider#readme",
+  "devDependencies": {
+    "serverless-python-requirements": "^5.1.1",
+    "serverless-wsgi": "^1.7.8"
+  },
+  "dependencies": {
+    "serverless": "^2.48.0"
+  }
+}
