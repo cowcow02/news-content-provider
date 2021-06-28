@@ -16,6 +16,8 @@ def serialize_objects(cursor):
 
 
 def serialize(article):
+    if not article:
+        return article
     article.pop('_id')
     article['date'] = article['date'].strftime('%Y-%m-%d')
     if article.get('highlights'):
@@ -25,7 +27,8 @@ def serialize(article):
 
 def serialize_highlights(highlights):
     path_types = set([v.get('path') for v in highlights])
-    return {path: max([v for v in highlights if v.get('path') == path], key=lambda x: x['score']) for path in path_types}
+    return {path: max([v for v in highlights if v.get('path') == path], key=lambda x: x['score']) for path in
+            path_types}
 
 
 def get_article(article_id):
@@ -52,24 +55,24 @@ def search_articles_by_keyword(keyword, limit=20, offset=0, sort=None):
     if sort:
         post_search_pipelines.insert(0, {'$sort': {'date': sort}})
     pipelines = [
-        {
-            '$search': {
-                'index': 'default',
-                'text': {
-                    'query': keyword,
-                    'path': ["headline", "body"],
-                },
-                "highlight": {
-                    "path": ["headline", "body"]
-                }
-            },
-        },
-        {
-            "$addFields": {
-                "highlights": {"$meta": "searchHighlights"}
-            }
-        },
-    ] + post_search_pipelines
+                    {
+                        '$search': {
+                            'index': 'default',
+                            'text': {
+                                'query': keyword,
+                                'path': ["headline", "body"],
+                            },
+                            "highlight": {
+                                "path": ["headline", "body"]
+                            }
+                        },
+                    },
+                    {
+                        "$addFields": {
+                            "highlights": {"$meta": "searchHighlights"}
+                        }
+                    },
+                ] + post_search_pipelines
 
     result = get_collection().aggregate(pipelines)
     results = serialize_objects(result)

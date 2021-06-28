@@ -4,7 +4,7 @@ import pymongo
 from flask import Flask, request, jsonify
 
 import mongo
-from exception_classes import BadRequest
+from exception_classes import BadRequest, NotFoundRequest
 
 app = Flask(__name__)
 app.url_map.strict_slashes = False
@@ -30,7 +30,10 @@ def list_articles():
 
 @app.route("/articles/<article_id>", methods=['GET'])
 def get_article(article_id):
-    return jsonify(mongo.get_article(article_id))
+    article = mongo.get_article(article_id)
+    if not article:
+        raise NotFoundRequest('Article not found.')
+    return jsonify(article)
 
 
 @app.route("/articles/search", methods=['GET'])
